@@ -5,13 +5,13 @@ namespace HomeMadrid\Models\Tables;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Spatie\Permission\Contracts\Permission as SpatiePermission;
 use Laravel\Passport\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use HomeMadrid\Models\Tables\Tpeople;
 use HomeMadrid\Notifications\ResetPasswordNotification;
+use HomeMadrid\Notifications\VerifyEmail;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
 
     use  Notifiable;
@@ -91,5 +91,16 @@ class User extends Authenticatable
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    /**
+     * Send the email verification notification.
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new \HomeMadrid\Notifications\VerifyEmail);
+        // $this->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
     }
 }

@@ -14,7 +14,7 @@
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/portafolio','PortafolioController@index')->name('portafolio');
+Route::get('/portafolio', 'PortafolioController@index')->name('portafolio');
 
 /* Route::get('/envato-user-helper-demo', function () {
     return EnventoUser::get_username(1);
@@ -26,7 +26,7 @@ Route::get('/home', function () {
 
 
 
-Auth::routes();
+Auth::routes(['verify' => true]);
 
 /*
 Route::group(['middleware' => ['auth']], function () {

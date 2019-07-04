@@ -3,37 +3,24 @@
 namespace HomeMadrid\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class ResetPasswordNotification extends Notification
+class VerifyEmail extends Notification
+//  implements ShouldQueue
 {
-    /**
-     * The password reset token.
-     *
-     * @var string
-     */
-    public $token;
-
+    // use Queueable;
     /**
      * The callback that should be used to build the mail message.
      *
      * @var \Closure|null
      */
     public static $toMailCallback;
-
-    /**
-     * Create a notification instance.
-     *
-     * @param  string  $token
-     * @return void
-     */
-    public function __construct($token)
-    {
-        $this->token = $token;
-    }
 
     /**
      * Get the notification's channels.
@@ -54,18 +41,34 @@ class ResetPasswordNotification extends Notification
      */
     public function toMail($notifiable)
     {
+        $verificationUrl = $this->verificationUrl($notifiable);
+
         if (static::$toMailCallback) {
-            return call_user_func(static::$toMailCallback, $notifiable, $this->token);
+            return call_user_func(static::$toMailCallback, $notifiable, $verificationUrl);
         }
 
         return (new MailMessage)
             ->greeting('¡Hola! ' . $notifiable->name_user)
-            ->subject(Lang::getFromJson('Solicitud de Restablecimiento de Contraseña.'))
-            ->line(Lang::getFromJson('Está recibiendo este correo electrónico porque recibimos una solicitud de restablecimiento de contraseña para su cuenta.'))
-            ->action(Lang::getFromJson('Restablecer contraseña'), url(config('app.url') . route('password.reset', ['token' => $this->token, 'email' => $notifiable->getEmailForPasswordReset()], false)))
-            ->line(Lang::getFromJson('Este enlace de restablecimiento de contraseña caducará en :count minutos.', ['count' => config('auth.passwords.users.expire')]))
-            ->line(Lang::getFromJson('Si no solicitó un restablecimiento de contraseña, no es necesario realizar ninguna otra acción.'))
+            ->subject(Lang::getFromJson('Solicitud de confirmaión de correo electrónico'))
+            ->line(Lang::getFromJson('Haga clic en el botón de abajo para verificar su dirección de correo electrónico.'))
+            ->action(Lang::getFromJson('Confirme su dirección de correo electrónico'), $verificationUrl)
+            ->line(Lang::getFromJson('Si no creó una cuenta, no se requiere ninguna acción adicional.'))
             ->salutation('¡Saludos!');
+    }
+
+    /**
+     * Get the verification URL for the given notifiable.
+     *
+     * @param  mixed  $notifiable
+     * @return string
+     */
+    protected function verificationUrl($notifiable)
+    {
+        return URL::temporarySignedRoute(
+            'verification.verify',
+            Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
+            ['id' => $notifiable->getKey()]
+        );
     }
 
     /**
