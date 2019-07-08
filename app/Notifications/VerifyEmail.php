@@ -11,10 +11,24 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class VerifyEmail extends Notification
-//  implements ShouldQueue
+class VerifyEmail extends Notification implements ShouldQueue
 {
-    // use Queueable;
+    use Queueable;
+    /**
+     * The number of times the job may be attempted.
+     *
+     * @var int
+     */
+    public $tries = 5;
+
+     /**
+     * The number of seconds the job can run before timing out.
+     *
+     * @var int
+     */
+    public $timeout = 120;
+
+
     /**
      * The callback that should be used to build the mail message.
      *
@@ -49,7 +63,7 @@ class VerifyEmail extends Notification
 
         return (new MailMessage)
             ->greeting('¡Hola! ' . $notifiable->name_user)
-            ->subject(Lang::getFromJson('Solicitud de confirmaión de correo electrónico'))
+            ->subject(Lang::getFromJson('Solicitud de confirmación de correo electrónico'))
             ->line(Lang::getFromJson('Haga clic en el botón de abajo para verificar su dirección de correo electrónico.'))
             ->action(Lang::getFromJson('Confirme su dirección de correo electrónico'), $verificationUrl)
             ->line(Lang::getFromJson('Si no creó una cuenta, no se requiere ninguna acción adicional.'))
